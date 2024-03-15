@@ -6,33 +6,33 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 class MessageService {
   messages: Message[] = [];
 
-  async all() {
+  async all() { // async all(): Promise<void>  - Missing return value type. 
       const res = await fetch('http://127.0.0.1:4010/messages')
       const data = await res.json();
 
       this.messages = data.messages.map((message: any) => new Message(message.text, message.status));
   }
 
-  async add(message: Message) {
+  async add(message: Message) {  // async add(message: Message): Promise<void>  - Missing return value type.
     this.messages.push(message);
   }
 }
 
 class Message {
-  text;
+  text; //text: string; - Missing type declaration
   status: string;
   constructor(message: string, status: string) {
     this.text = message;
     this.status = status;
   }
 
-  empty() {
+  empty() { // empty(): string  - Missing return value type.
     return this.text === '';
   }
 }
 
 @Component({
-  selector: 'app-massage',
+  selector: 'app-massage', // typo in word message. Should change prefix (app)
   standalone: true,
   template: `
     <div style="background-color: #fff;">
@@ -47,8 +47,8 @@ class Message {
   ]
 })
 class MessageComponent {
-  @Input({ required: true }) message: any;
-  @Input() no: any;
+  @Input({ required: true }) message: any; // Should not use any, type should be Message(that is name of Class)
+  @Input() no: any; // Should not use any, type should be number | string
 }
 
 @Component({
@@ -75,7 +75,7 @@ class ChatComponent implements OnInit {
 
     }
 
-    async ngOnInit() {
+    async ngOnInit() {  // async ngOnInit(): Promise<void>  - Missing return value type.
       // @ts-ignore
       await this.messageService.all();
       this.messages = this.messageService.messages;
@@ -95,7 +95,7 @@ class ChatComponent implements OnInit {
   ],
   template: `
     <div *ngIf="! message.empty()">
-      <app-massage [message]="message" no="preview"></app-massage>
+      <app-massage [message]="message" no="preview"></app-massage> <!-- Remove space between ! and message -->
     </div>
     <form (ngSubmit)="onSubmit()">
       <label class="mt-4">
@@ -110,7 +110,7 @@ class ChatComponent implements OnInit {
       >Send</button>
     </form>
   `,
-  styles: ``
+  styles: `` // Since we are not using any of the styling attributes we can delete this line
 })
 class CreateMessageComponent {
   message: Message = new Message('', 'draft');
@@ -120,11 +120,14 @@ class CreateMessageComponent {
     this.messageService = messageService;
   }
 
-  async onSubmit() {
+  async onSubmit() { //  async onSubmit()  - Missing return value type.
       this.message.status = 'pending';
       const res = await fetch('http://127.0.0.1:4010/messages/send', {
-        method: 'GET',
+        method: 'GET', //The method is not good, it should be POST
         body: JSON.stringify({text: this.message.text}),
+        // headers: { // added Content-Type header
+        //   'Content-Type': 'application/json'
+        // }
       });
       res.status === 204 ? this.message.status = 'sent' : this.message.status = 'failed';
       await this.messageService.add(this.message);
